@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MeCode Pro - Code Editor</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.36.1/min/vs/loader.min.js"></script>
+    <script>
+        // Check if user is logged in
+        if (localStorage.getItem('isLoggedIn') !== 'true') {
+            window.location.href = 'index.html';
+        }
+
+        require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.36.1/min/vs' }});
+        require(['vs/editor/editor.main'], function() {
+            window.editor = monaco.editor.create(document.getElementById('editor'), {
+                value: '// Welcome to MeCode Pro!\n// Start coding here...',
+                language: 'javascript',
+                theme: 'vs-dark',
+                automaticLayout: true,
+                minimap: {
+                    enabled: true
+                },
+                fontSize: 14,
+                lineNumbers: 'on',
+                roundedSelection: false,
+                scrollBeyondLastLine: false,
+                readOnly: false,
+                cursorStyle: 'line',
+                tabSize: 4,
+                wordWrap: 'on',
+                folding: true,
+                lineDecorationsWidth: 0,
+                lineNumbersMinChars: 3,
+                scrollbar: {
+                    vertical: 'visible',
+                    horizontal: 'visible'
+                }
+            });
+        });
+    </script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+        }
+        #container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+        #toolbar {
+            background-color: #1e1e1e;
+            padding: 10px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            border-bottom: 1px solid #333;
+        }
+        #editor {
+            flex-grow: 1;
+            width: 100%;
+            height: calc(100vh - 50px);
+        }
+        .btn {
+            background-color: #0e639c;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.2s;
+        }
+        .btn:hover {
+            background-color: #1177bb;
+        }
+        select {
+            background-color: #2d2d2d;
+            color: white;
+            border: 1px solid #3c3c3c;
+            padding: 8px;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        #status {
+            color: #888;
+            font-size: 12px;
+        }
+        #user-info {
+            margin-left: auto;
+            color: #888;
+            font-size: 14px;
+        }
+        #logout-btn {
+            background-color: #dc3545;
+        }
+        #logout-btn:hover {
+            background-color: #c82333;
+        }
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #0e639c;
+            margin-right: 20px;
+        }
+        .logo span {
+            color: #ffffff;
+        }
+        .toolbar-left {
+            display: flex;
+            align-items: center;
+        }
+        .toolbar-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <div id="toolbar">
+            <div class="toolbar-left">
+                <div class="logo">
+                    <span style="color: #0e639c">Me</span>Code Pro
+                </div>
+                <select id="language-select" onchange="changeLanguage()">
+                    <option value="javascript">JavaScript</option>
+                    <option value="typescript">TypeScript</option>
+                    <option value="html">HTML</option>
+                    <option value="css">CSS</option>
+                    <option value="python">Python</option>
+                    <option value="java">Java</option>
+                    <option value="cpp">C++</option>
+                    <option value="csharp">C#</option>
+                    <option value="php">PHP</option>
+                    <option value="ruby">Ruby</option>
+                    <option value="go">Go</option>
+                    <option value="rust">Rust</option>
+                    <option value="swift">Swift</option>
+                    <option value="kotlin">Kotlin</option>
+                </select>
+                <select id="theme-select" onchange="changeTheme()">
+                    <option value="vs-dark">Dark</option>
+                    <option value="vs-light">Light</option>
+                    <option value="hc-black">High Contrast</option>
+                </select>
+            </div>
+            <div class="toolbar-right">
+                <button class="btn" onclick="openFile()">Open File</button>
+                <button class="btn" onclick="saveFile()">Save</button>
+                <button class="btn" onclick="formatCode()">Format</button>
+                <span id="status"></span>
+                <span id="user-info"></span>
+                <button id="logout-btn" class="btn" onclick="logout()">Logout</button>
+            </div>
+        </div>
+        <div id="editor"></div>
+    </div>
+
+    <script>
+        // Display current user
+        document.getElementById('user-info').textContent = `Logged in as: ${localStorage.getItem('currentUser')}`;
+
+        function changeLanguage() {
+            const language = document.getElementById('language-select').value;
+            monaco.editor.setModelLanguage(window.editor.getModel(), language);
+            updateStatus(`Language changed to ${language}`);
+        }
+
+        function changeTheme() {
+            const theme = document.getElementById('theme-select').value;
+            monaco.editor.setTheme(theme);
+            updateStatus(`Theme changed to ${theme}`);
+        }
+
+        function getFileExtension(language) {
+            const extensions = {
+                'javascript': '.js',
+                'typescript': '.ts',
+                'html': '.html',
+                'css': '.css',
+                'python': '.py',
+                'java': '.java',
+                'cpp': '.cpp',
+                'csharp': '.cs',
+                'php': '.php',
+                'ruby': '.rb',
+                'go': '.go',
+                'rust': '.rs',
+                'swift': '.swift',
+                'kotlin': '.kt'
+            };
+            return extensions[language] || '.txt';
+        }
+
+        function openFile() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.txt,.js,.ts,.html,.css,.py,.java,.cpp,.cs,.php,.rb,.go,.rs,.swift,.kt';
+            
+            input.onchange = function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const content = e.target.result;
+                        window.editor.setValue(content);
+                        
+                        // Set language based on file extension
+                        const extension = file.name.split('.').pop().toLowerCase();
+                        const languageMap = {
+                            'js': 'javascript',
+                            'ts': 'typescript',
+                            'html': 'html',
+                            'css': 'css',
+                            'py': 'python',
+                            'java': 'java',
+                            'cpp': 'cpp',
+                            'cs': 'csharp',
+                            'php': 'php',
+                            'rb': 'ruby',
+                            'go': 'go',
+                            'rs': 'rust',
+                            'swift': 'swift',
+                            'kt': 'kotlin'
+                        };
+                        
+                        if (languageMap[extension]) {
+                            document.getElementById('language-select').value = languageMap[extension];
+                            monaco.editor.setModelLanguage(window.editor.getModel(), languageMap[extension]);
+                        }
+                        
+                        updateStatus(`File opened: ${file.name}`);
+                    };
+                    reader.readAsText(file);
+                }
+            };
+            
+            input.click();
+        }
+
+        function saveFile() {
+            const content = window.editor.getValue();
+            const language = document.getElementById('language-select').value;
+            const extension = getFileExtension(language);
+            const blob = new Blob([content], { type: 'text/plain' });
+            
+            if ('showSaveFilePicker' in window) {
+                const options = {
+                    types: [
+                        {
+                            description: 'Code Files',
+                            accept: {
+                                'text/plain': [extension]
+                            }
+                        }
+                    ],
+                    suggestedName: `code${extension}`
+                };
+
+                window.showSaveFilePicker(options)
+                    .then(fileHandle => {
+                        const writable = fileHandle.createWritable();
+                        writable.write(blob)
+                            .then(() => {
+                                updateStatus(`File saved as ${fileHandle.name}`);
+                            })
+                            .catch(error => {
+                                updateStatus('Error saving file: ' + error.message);
+                            });
+                    })
+                    .catch(error => {
+                        if (error.name !== 'AbortError') {
+                            updateStatus('Error: ' + error.message);
+                        }
+                    });
+            } else {
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `code${extension}`;
+                a.click();
+                window.URL.revokeObjectURL(url);
+                updateStatus('File saved successfully');
+            }
+        }
+
+        function formatCode() {
+            window.editor.getAction('editor.action.formatDocument').run();
+            updateStatus('Code formatted');
+        }
+
+        function updateStatus(message) {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            setTimeout(() => {
+                status.textContent = '';
+            }, 3000);
+        }
+
+        function logout() {
+            localStorage.removeItem('isLoggedIn');
+            localStorage.removeItem('currentUser');
+            window.location.href = 'index.html';
+        }
+
+        // Add keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.key === 's') {
+                e.preventDefault();
+                saveFile();
+            }
+            if (e.ctrlKey && e.key === 'f') {
+                e.preventDefault();
+                formatCode();
+            }
+            if (e.ctrlKey && e.key === 'o') {
+                e.preventDefault();
+                openFile();
+            }
+        });
+    </script>
+</body>
+</html> 
