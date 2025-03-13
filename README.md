@@ -37,4 +37,4 @@ A professional code editor available as both a web application and desktop appli
 - Kotlin
 
 ## License
-ISC 
+MIT
